@@ -1,0 +1,6 @@
+domain: tutorial.kubebuilder.io
+layout:
+- go.kubebuilder.io/v3
+projectName: cronjob-operator
+repo: github.com/erlisb/cronjob-operator
+version: "3"
