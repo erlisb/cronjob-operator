@@ -3,4 +3,14 @@ layout:
 - go.kubebuilder.io/v3
 projectName: cronjob-operator
 repo: github.com/erlisb/cronjob-operator
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: tutorial.kubebuilder.io
+  group: batch
+  kind: CronJob
+  path: github.com/erlisb/cronjob-operator/api/v1
+  version: v1
 version: "3"
