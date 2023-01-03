@@ -22,7 +22,9 @@ import (
 
 	kbatch "k8s.io/api/batch/v1"
     corev1 "k8s.io/api/core/v1"
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+    ref "k8s.io/client-go/tools/reference"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -74,6 +76,7 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
 	var successfulJobs []*kbatch.Job
 	var failedJobs []*kbatch.Job
 	var mostRecentTime *time.Time
+	var childJobs kbatch.JobList
 
 	isJobFinished := func(job *kbatch.Job) (bool, kbatch.JobConditionType) {
 		for _, c := range job.Status.Conditions {
@@ -97,12 +100,64 @@ func (r *CronJobReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ct
         return &timeParsed, nil
     }
 
+	for i, job := range childJobs.Items {
+		_, finishedType := isJobFinished(&job)
+
+		switch finishedType{
+		case "":
+			activeJobs = append(activeJobs, &childJobs.Items[i])
+		case kbatch.JobFailed:
+			failedJobs = append(failedJobs, &childJobs.Items[i])
+		case kbatch.JobComplete:
+			successfulJobs = append(successfulJobs, &childJobs.Items[i])
+		}
+
+		scheduledTimeForJob, err := getScheduledTimeForJob(&job)
+		
+		if err != nil {
+			log.Error(err, "unable to parse schedule time for child job", "job", &job)
+			continue
+		}
+
+		if scheduledTimeForJob != nil{
+			if mostRecentTime == nil {
+				mostRecentTime = scheduledTimeForJob
+			} else if mostRecentTime.Before(*scheduledTimeForJob){
+				mostRecentTime = scheduledTimeForJob
+			}
+		}
+	}	
+
+	if mostRecentTime != nil{
+		cronJob.Status.LastScheduleTime = &metav1.time{Time: *mostRecentTime}
+	} else {
+		cronJob.Status.LastScheduleTime = nil
+	}
+
+    cronJob.Status.Active = nil
+    for _, activeJob := range activeJobs {
+        jobRef, err := ref.GetReference(r.Scheme, activeJob)
+        if err != nil {
+            log.Error(err, "unable to make reference to active job", "job", activeJob)
+            continue
+        }
+        cronJob.Status.Active = append(cronJob.Status.Active, *jobRef)
+    }
+	
+	log.V(1).Info("job count", "active jobs", len(activeJobs), "successful jobs", len(successfulJobs), "failed jobs", len(failedJobs))
+
+	if err := r.Status().Update(ctx, &cronJob); err != nil{
+		log.Error(err, "unable to update CronJob status")
+		return ctrl.Result{}, err
+	}
+
+	
+
 	if err := r.Get(ctx, req.NamespacedName, &cronJob); err != nil {
 		log.Error(err, "unable to fetch CronJob")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	var childJobs kbatch.JobList
 	if err := r.List(ctx, &childJobs, client.InNamespace(req.Namespace), client.MatchingFields{jobOwnerKey: req.Name}); err != nil {
 		log.Error(err, "unable to list child Jobs")
 		return ctrl.Result{}, err
