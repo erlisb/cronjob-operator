@@ -47,7 +47,10 @@ spec:
                 - Replace
                 type: string
               failedJobsHistoryLimit:
+                description: The number of failed finished jobs to retain. This is
+                  a pointer to distinguish between explicit zero and not specified.
                 format: int32
+                minimum: 0
                 type: integer
               jobTemplate:
                 description: Specifies the job that will be created when executing
@@ -8307,6 +8310,7 @@ spec:
                     type: object
                 type: object
               schedule:
+                description: The schedule in Cron format, see https://en.wikipedia.org/wiki/Cron.
                 minLength: 0
                 type: string
               startingDeadlineSeconds:
@@ -8317,7 +8321,10 @@ spec:
                 minimum: 0
                 type: integer
               successfulJobsHistoryLimit:
+                description: The number of successful finished jobs to retain. This
+                  is a pointer to distinguish between explicit zero and not specified.
                 format: int32
+                minimum: 0
                 type: integer
               suspend:
                 description: This flag tells the controller to suspend subsequent
@@ -8396,6 +8403,8 @@ spec:
                   x-kubernetes-map-type: atomic
                 type: array
               lastScheduleTime:
+                description: Information when was the last time the job was successfully
+                  scheduled.
                 format: date-time
                 type: string
             type: object
