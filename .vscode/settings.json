@@ -1,5 +1,6 @@
 {
     "yaml.schemas": {
-        "kubernetes://schema/admissionregistration.k8s.io/v1%40mutatingwebhookconfiguration": "file:///home/erlisb/testing/cronjob-operator/config/webhook/manifests.yaml"
+        "kubernetes://schema/admissionregistration.k8s.io/v1%40mutatingwebhookconfiguration": "file:///home/erlisb/testing/cronjob-operator/config/webhook/manifests.yaml",
+        "kubernetes://schema/v1%40namespace": "file:///home/erlisb/testing/cronjob-operator/config/manager/manager.yaml"
     }
 }
