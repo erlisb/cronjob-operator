@@ -8,7 +8,7 @@ metadata:
     It uses Controllers which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster.
   annotations:
     github.com/project-slug: erlisb/cronjob-operator
-    backstage.io/techdocs-ref: ./README.md
+    backstage.io/techdocs-ref: dir:./README.md
 spec:
   type: library
   owner: CNCF
