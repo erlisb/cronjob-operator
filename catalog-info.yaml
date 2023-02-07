@@ -1,0 +1,14 @@
+
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cronjob-operator
+  description: |
+    This project aims to follow the Kubernetes Operator pattern
+    It uses Controllers which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster.
+  annotations:
+    github.com/project-slug: erlisb/cronjob-operator
+spec:
+  type: library
+  owner: CNCF
+  lifecycle: experimental
